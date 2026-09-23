@@ -4,28 +4,28 @@ name: Pipeline
 # builds the page into an image and checks it renders. Nothing is deployed yet.
 # LAB.md tells you what to add next.
 
-on:
+on:                                                                          # when to run the workflow a pull request on the main branch
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main]                                                        # when to run the workflow a push to the main branch
   workflow_dispatch:
 
-permissions:
+permissions:                                                                # giving permissions to read the contents
   contents: read
 
-env:
+env:                                                                        # the environment where the code is built
   IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/${{ vars.AR_REPO }}/frontend
 
 jobs:
   test:
     name: Build and smoke test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 10                                                     # buld and smoke test to be run on ubuntu-latest with 10 minutes timeout
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
+          persist-credentials: false                                        # the actions referencing v7.0.1 without persisiting the credentials
 
       - name: Stamp the page
         env:
@@ -33,10 +33,10 @@ jobs:
           SHA: ${{ github.sha }}
           ACTOR: ${{ github.actor }}
           DEPLOY_ENV: ci
-        run: python3 scripts/stamp.py
+        run: python3 scripts/stamp.py                                       # a step to stamp the teams page on the CI environment and run the stamp script
 
       - name: Build the image
-        run: docker build -t frontend:test app
+        run: docker build -t frontend:test app                              # step to build the docker test app
 
       - name: Run it and check it answers
         run: |
@@ -44,4 +44,4 @@ jobs:
           for i in $(seq 1 20); do curl -fs localhost:8080 >/dev/null && break; sleep 1; done
           curl -fs localhost:8080 | grep -q "Shipped by a pipeline" \
             || { echo "::error::The page did not render"; exit 1; }
-          echo "### Smoke test passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Smoke test passed" >> "$GITHUB_STEP_SUMMARY"           # step to run the page on port 8080 on localhost and print on the summary
